@@ -1,27 +1,40 @@
 # -*- coding: utf-8 -*-
-'''
+"""
+CATHARSIS API:
+    A back-end API to the CATHARSIS app.
 
-Homepage and documentation: http://
+
+ENDPOINT:
+    http://endpoint.currently.private/
+    (endpoint is private until usage limits are defined & enforced)
+
+
+TO TEST:
+
+    Get playlists:
+    curl http://{{endpoint}}/playlists
+
+    Get a playlist:
+    curl http://{{endpoint}}/playlists/:id
+
+    Create a playlist:
+    curl http://{{endpoint}}/playlists -X POST -d '{"name": "testlist", "qty": 0, "duration": 0}' --header "Content-Type: application/json"
+
+    Update a playlist:
+    curl http://{{endpoint}}/playlists/:id -X PUT -d '{"name": "fight scenes", "qty": 0, "duration": 0}' --header "Content-Type: application/json"
+
+    Remove a playlist:
+    curl http://{{endpoint}}/playlists/:id -X DELETE
+
 
 RULES:
-* incomming data must be have Content-Type: application/json
-* data must be enclosed by single quotes ('') and properties enclosed in double quotes ("")
+    * incomming data must be have Content-Type: application/json in the request header
+    * data must be enclosed by single quotes & properties enclosed in double quotes ( '{"name": "testlist"}' )
 
-TEST:
-
-clear && curl http://0.0.0.0:5000/playlists -v && echo ''
-clear && curl http://0.0.0.0:5000/playlists/5160d25fe14fe32a8d00065b -v && echo ''
-clear && curl http://0.0.0.0:5000/playlists -X POST -d '{"name": "test9pm", "qty": 0, "duration": 0}' --header "Content-Type: application/json" -v && echo ''
-clear && curl http://0.0.0.0:5000/playlists/5162082758e8380ae387617b -X PUT -d '{"name": "fight scenes", "qty": 0, "duration": 0}' --header "Content-Type: application/json" -v && echo ''
-clear && curl http://0.0.0.0:5000/playlists/5162082758e8380ae387617b -X DELETE -v && echo ''
-
--X  -v
-
--X PUT -v
 
 Copyright (c) 2012, Phil Skaroulis.
 License: MIT (see LICENSE for details)
-'''
+"""
 
 
 __author__ = 'Phil Skaroulis'
@@ -33,8 +46,6 @@ __license__ = 'MIT'
 ## IMPORTS
 
 import os, json, logging
-
-from os.path import join, dirname
 
 from functools import wraps
 from contextlib import contextmanager
@@ -56,13 +67,14 @@ from bottle import route, get, post, put, delete, response, hook, error, static_
 
 # prep the logger
 logging.basicConfig(level=logging.DEBUG)
-logging.info('Started')
-logging.debug('Hello from Catharsis API')
+logging.info('Info from Catharsis API')
+logging.debug('Debug from Catharsis API')
 
 # read environment vars
 DB_NAME = os.getenv('CATHARSIS_DB_NAME', None)
 DB_URL = os.getenv('CATHARSIS_DB_URL', None)
 TMDB_KEY = os.getenv('CATHARSIS_TMDB_KEY', None)
+# check environment vars
 logging.debug("DB_NAME={}".format(DB_NAME) )
 logging.debug("DB_URL={}".format(DB_URL) )
 logging.debug("TMDB_KEY={}".format(TMDB_KEY) )
@@ -92,8 +104,13 @@ class DatabaseError(Error):
 
 @contextmanager
 def mongo(collection_name):
+    """Context manager to handle mongo connectivity.
+
+    Attributes:
+        collection_name  -- name of the mongo collection
+    """
     # may want to pass that in db_name too, later on, when multiple databases are needed
-    if (!DB_NAME) or (!DB_URL):
+    if (not DB_NAME) or (not DB_URL):
         raise DatabaseError('Database information was not found in the environment variables.')
     else:
         mongo_client = MongoClient(DB_URL+DB_NAME)
@@ -105,7 +122,7 @@ def mongo(collection_name):
 
 # utility procedure
 def clean_data(obj):
-    '''clean up the data in preparation to be returned to user.'''
+    """Clean up the data in preparation to be returned to user."""
 
     # clean up the dictionary
     if isinstance(obj, dict):
@@ -125,6 +142,17 @@ def clean_data(obj):
 
 # decorator to wrap each HTTP request handler
 def make_dry(fn):
+    """Keep the code DRY by wrapping each HTTP request handler with this decorator.
+
+    Init Activities:
+    * convert string id into an 'ObjectId' object for use with MongoDB methods
+
+    Wrap up Activities:
+    * change id from: "_id": {"$oid": "5160d25fe14fe32a8d00065b"}
+                to: "id": "5160d25fe14fe32a8d00065b"
+    * convert dict to JSON ("jsonize response")
+
+    """
     @wraps(fn)
     def wrapper(*args, **kwargs):
 
@@ -146,15 +174,6 @@ def make_dry(fn):
 
         return json_data
 
-    return wrapper
-
-
-# decorator
-def dejsonise(fn):
-    '''Convert a JSON to dict when consuming HTTP Responses'''
-    @wraps(fn)
-    def wrapper(*args, **kw):
-        return json.loads(fn(*args, **kw))
     return wrapper
 
 
@@ -366,7 +385,7 @@ def delete_clip(id):
 
 ## error responses
 
-'''
+"""
 @app.error(code=400)
 @app.error(code=401)
 @app.error(code=403)
@@ -377,7 +396,7 @@ def delete_clip(id):
 @app.error(code=500)
 @app.error(code=501)
 @app.error(code=502)
-'''
+"""
 
 @error(404)
 def error404(error):
