@@ -295,7 +295,6 @@ clip_collection_name = 'clips'
 
 
 # list
-@get('/')
 @get('/clips')
 @get('/clips/')
 @make_dry
@@ -379,6 +378,16 @@ def delete_clip(id):
             response_dict = {'status': 200, 'content': 'Ok. That clip is gone. Outta here!' }
     except Exception as ve:
         response_dict = json_error(400, str(ve))
+    return response_dict
+
+
+
+
+## root
+@get('/')
+@make_dry
+def index():
+    response_dict = {"response":[{"code": 200, "message": 'Greetings! Welcome to the Catharsis API.'}]}
     return response_dict
 
 
