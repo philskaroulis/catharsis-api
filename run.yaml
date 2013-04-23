@@ -1,0 +1,9 @@
+uwsgi:
+        home: /home/dennis/.env/catharsis-api
+        wsgi-file: run.py
+        pidfile: run.pid
+        daemonize: run.log
+        master: true
+        processes: 2
+        socket: localhost:3999
+
